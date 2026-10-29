@@ -468,3 +468,14 @@ LNG
 
 +化工
 +原料
+
+[油气核心]
+石油
+原油
+油价
+油气
+天然气
+成品油
+炼化
+
+/\b(oil|crude|petroleum|Brent|WTI)\b/i
