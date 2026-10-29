@@ -1,0 +1,42 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Clone upstream
+        run: |
+          rm -rf /tmp/upstream
+          git clone --depth 1 https://github.com/sansan0/TrendRadar.git /tmp/upstream
+
+      - name: Sync files
+        run: |
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude 'README*.md' \
+            --exclude 'config/frequency_words.txt' \
+            --exclude 'config/custom' \
+            --exclude '.github/workflows/sync-upstream.yml' \
+            /tmp/upstream/ ./
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Upstream already up to date"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "Sync upstream $(date -u +%Y-%m-%d)"
+          git push
