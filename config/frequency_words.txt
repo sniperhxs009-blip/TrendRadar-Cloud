@@ -478,4 +478,4 @@ LNG
 成品油
 炼化
 
-/\b(oil|crude|petroleum|Brent|WTI)\b/i
+/\b(oil|crude|petroleum|Brent|WTI|natural gas|gasoline|OPEC)\b/i

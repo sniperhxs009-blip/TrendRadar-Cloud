@@ -32,6 +32,29 @@ jobs:
             --exclude 'config/custom' \
             --exclude '.github/workflows/sync-upstream.yml' \
             /tmp/upstream/ ./
+
+      - name: Re-apply OilPrice RSS feed
+        run: |
+          python3 - <<'PY'
+          import io, sys
+          p = 'config/config.yaml'
+          s = io.open(p, encoding='utf-8').read()
+          if 'oilprice' in s:
+              print('OilPrice feed already present')
+              sys.exit(0)
+          anchor = ('    - id: "yahoo-finance"\n'
+                    '      name: "雅虎财经"\n'
+                    '      url: "https://finance.yahoo.com/news/rssindex"\n')
+          feed = ('\n    - id: "oilprice"\n'
+                  '      name: "OilPrice"\n'
+                  '      url: "https://oilprice.com/rss/main"\n')
+          if anchor not in s:
+              print('ERROR: yahoo anchor not found; upstream config changed, oil feed NOT added')
+              sys.exit(1)
+          io.open(p, 'w', encoding='utf-8', newline='\n').write(s.replace(anchor, anchor + feed, 1))
+          print('OilPrice feed added')
+          PY
+
           git add -A
           if git diff --cached --quiet; then
             echo "Upstream already up to date"

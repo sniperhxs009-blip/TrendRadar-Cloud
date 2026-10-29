@@ -141,6 +141,10 @@ rss:
       name: "雅虎财经"
       url: "https://finance.yahoo.com/news/rssindex"
 
+    - id: "oilprice"
+      name: "OilPrice"
+      url: "https://oilprice.com/rss/main"
+
     # 自定义源示例
     # - id: "custom-feed"
     #   name: "自定义源"
