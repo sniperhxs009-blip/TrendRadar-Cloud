@@ -31,6 +31,7 @@ jobs:
             --exclude 'config/frequency_words.txt' \
             --exclude 'config/custom' \
             --exclude '.github/workflows/sync-upstream.yml' \
+            --exclude '.github/workflows/crawler-backup.yml' \
             /tmp/upstream/ ./
 
       - name: Re-apply OilPrice RSS feed

@@ -1,0 +1,51 @@
+name: Crawler backup
+
+# GitHub 的 schedule 在新建仓库上经常漏跑；本工作流每 20 分钟检查一次，
+# 若 crawler 已超过 50 分钟没跑，就手动派发一次；50 分钟内已有运行则跳过，避免重复推送。
+
+on:
+  schedule:
+    - cron: "7,27,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: crawler-backup
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger crawler if stale
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
+        run: |
+          set -e
+          INFO=$(gh api "repos/$REPO/actions/workflows/crawler.yml/runs?per_page=1" \
+            --jq '.workflow_runs[0] | [.status, .conclusion, .created_at] | @tsv')
+          STATUS=$(echo "$INFO" | cut -f1)
+          CONCLUSION=$(echo "$INFO" | cut -f2)
+          CREATED=$(echo "$INFO" | cut -f3)
+          NOW=$(date -u +%s)
+          THEN=$(date -d "$CREATED" +%s)
+          AGE=$((NOW-THEN))
+          echo "latest crawler: status=$STATUS conclusion=$CONCLUSION age=${AGE}s"
+
+          if [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "queued" ]; then
+            echo "crawler is busy; skip"
+            exit 0
+          fi
+
+          if [ "$AGE" -lt 3000 ]; then
+            echo "crawler ran ${AGE}s ago; skip"
+            exit 0
+          fi
+
+          gh workflow run crawler.yml --repo "$REPO" --ref "$REF"
+          echo "dispatched crawler"
